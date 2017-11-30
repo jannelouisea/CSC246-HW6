@@ -3,6 +3,8 @@
 #include "myUDP.h"
 #include <assert.h>
 #include <stdio.h>
+#include <time.h>
+#include <sys/time.h>
 
 #define BUFFER_SIZE 128
 #define NUM_OF_CITIES 5
@@ -84,6 +86,32 @@ char * process_message(char * msg) {
             printf("Register message\n");
             strcpy(reply, tokens[1]);
             strcat(reply, " registered with server");
+        } else  if (colon_count == 3 && (strcmp(tokens[0], "r") == 0 || strcmp(tokens[0], "R") == 0)) {
+            // Check the city code
+            int city_idx = -1;
+            for (int i = 0; i < NUM_OF_CITIES; i++) {
+                if (strcmp(tokens[1], cities[i].abv) == 0) {
+                    city_idx = i;
+                }
+            }
+
+            if (city_idx < 0) {
+                strcpy(reply, "Error city code!");
+            } else {
+                printf("Updating %s temp\n", cities[city_idx].abv);
+
+                // Get the current Raleigh hour
+                struct timeval tv;
+                time_t currtime;
+                struct tm * currtm;
+                int currhour;
+
+                gettimeofday(&tv, NULL);
+                currtime = tv.tv_sec;
+                currtm = localtime(&currtime);
+                currhour = currtm->tm_hour;
+                printf("Curr hour %d\n", currhour);
+            }
         } else {
             strcpy(reply, "Message ");
             strcat(reply, msg);
@@ -129,8 +157,6 @@ int main(int argc, char *argv[]) {
 
         // Sending message back to client
         if (rc > 0) {
-            // char reply[BUFFER_SIZE];
-            // sprintf(reply, "Hi from SERVER");
             char * reply = process_message(message);
             rc = UDP_Write(sd, &addr, reply, BUFFER_SIZE);
         }
