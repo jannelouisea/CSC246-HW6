@@ -19,28 +19,43 @@ int main(int argc, char *argv[]) {
     int cport;                // Port for the client
 
     // Get params
-    if (argc == 5) {
+    if (argc == 4) {
         sscanf(argv[1], "%s", (char *) &ip);
         sscanf(argv[2], "%d", &sport);
         sscanf(argv[3], "%s", (char *) &id);
-        sscanf(argv[4], "%d", &cport);
+        // sscanf(argv[4], "%d", &cport);
 
         // printf("%s %d %s\n", ip, sport, id);
     } else {
-        printf("Usage: ./client ip port id port'\n");
+        printf("Usage: ./client ip port id\n");
         return 0;
     }
 
+    // Establish unique port for the client
+    int port_found = 0;
+    int port;
+    int sd = -1;
+    while (!port_found) {
+        port = MIN_PORT + rand() / (RAND_MAX / (MAX_PORT - MIN_PORT + 1) + 1);
+        sd = UDP_Open(port);
+        if (port != sport && sd > -1) {
+            // printf("Port found for new client %d\n", port);
+            port_found = 1;
+        }
+    }
+
     // Open connection for client
-    if (cport == sport) {
+    /*
+    if (port == sport) {
         printf("Error: port' equals port, those values cannot be the same\n");
         return 0;
     }
-    int sd = UDP_Open(cport);
+    int sd = UDP_Open(port);
     if (sd <= -1) {
-        printf("Error: port' %d is already being used\n", cport);
+        printf("Error: port' %d is already being used\n", port);
         return 0;
     }
+     */
 
     struct sockaddr_in addrSnd, addrRcv;
 

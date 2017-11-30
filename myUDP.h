@@ -7,6 +7,8 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
+#define h_addr h_addr_list[0]
+
 int UDP_Open(int port) {
   int sd;
   if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)

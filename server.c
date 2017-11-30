@@ -8,8 +8,20 @@
 
 #define BUFFER_SIZE 128
 #define NUM_OF_CITIES 5
+#define NUM_OF_CLIENTS 50
 
 int port = 0;
+
+/*
+struct client {
+    char * id;
+    int in_use;
+};
+
+struct client clients[NUM_OF_CLIENTS];
+
+int avail_clients = 0;
+ */
 
 struct city {
     char * abv;
@@ -106,6 +118,35 @@ char * process_message(char * msg) {
             printf("Register message\n");
             strcpy(reply, tokens[1]);
             strcat(reply, " registered with server");
+
+            // check id client already exists
+            /*
+            int id_in_use = 0;
+            int new_client_idx = -1;
+            for (int i = 0; i < avail_clients; i++) {
+                printf("i %d", i);
+                if (strcmp(clients[i].id, tokens[1]) == 0) {
+                    if (clients[i].in_use == 0) {
+                        new_client_idx = i;
+                        clients[i].in_use = 1;
+                    } else {
+                        id_in_use = 1;
+                    }
+                }
+            }
+            printf("Here");
+
+            strcpy(reply, tokens[1]);
+            if (!id_in_use) {
+                if (new_client_idx < 0) {       // client id is not in clients
+                    strcpy(clients[avail_clients].id, tokens[1]);
+                    clients[avail_clients].in_use = 1;
+                }
+                strcat(reply, " registered with server");
+            } else {
+                strcat(reply, " id is already in use");
+            }
+             */
         } else  if (colon_count == 3 && (strcmp(tokens[0], "r") == 0 || strcmp(tokens[0], "R") == 0)) {
             // Check the city code
             int city_idx = -1;
@@ -169,6 +210,8 @@ int main(int argc, char *argv[]) {
 
     set_cities();
 
+    // clients = malloc(NUM_OF_CLIENTS * sizeof(struct client));
+
     // Get the port number
     if (argc == 2) {
         sscanf(argv[1], "%d", &port);
@@ -198,6 +241,8 @@ int main(int argc, char *argv[]) {
 
         // Free message?
     }
+
+    // free(clients);
 
     return 0;
 }
