@@ -13,20 +13,40 @@ int port = 0;
 
 struct city {
     char * abv;
+    int curr_hour;
+    int sum_tmps;
+    int num_tms_curr_hour;
     int hour_avg_temp;
 };
 
 struct city cities[NUM_OF_CITIES] = {
-        {"RDU", 0},
-        {"CLT", 0},
-        {"ATL", 0},
-        {"CHS", 0},
-        {"RIC", 0}
+        {"RDU", 0, 0, 0, 0},
+        {"CLT", 0, 0, 0, 0},
+        {"ATL", 0, 0, 0, 0},
+        {"CHS", 0, 0, 0, 0},
+        {"RIC", 0, 0, 0, 0}
 };
 
-void print_cities() {
+int get_curr_hour() {
+    struct timeval tv;
+    time_t currtime;
+    struct tm * currtm;
+    int currhour;
+
+    gettimeofday(&tv, NULL);
+    currtime = tv.tv_sec;
+    currtm = localtime(&currtime);
+    currhour = currtm->tm_hour;
+    printf("Curr hour %d\n", currhour);
+
+    return currhour;
+}
+
+void set_cities() {
+    int currhour = get_curr_hour();
     for (int i = 0; i < NUM_OF_CITIES; i++) {
-        printf("%s %d\n", cities[i].abv, cities[i].hour_avg_temp);
+        cities[i].curr_hour = currhour;
+        printf("abv %s curr_hour %d sum %d num_tms %d tmp %d\n", cities[i].abv, cities[i].curr_hour, cities[i].sum_tmps, cities[i].num_tms_curr_hour, cities[i].hour_avg_temp);
     }
 }
 
@@ -98,19 +118,34 @@ char * process_message(char * msg) {
             if (city_idx < 0) {
                 strcpy(reply, "Error city code!");
             } else {
-                printf("Updating %s temp\n", cities[city_idx].abv);
+                // printf("Updating %s temp\n", cities[city_idx].abv);
 
                 // Get the current Raleigh hour
-                struct timeval tv;
-                time_t currtime;
-                struct tm * currtm;
-                int currhour;
+                int currhour = get_curr_hour();
 
-                gettimeofday(&tv, NULL);
-                currtime = tv.tv_sec;
-                currtm = localtime(&currtime);
-                currhour = currtm->tm_hour;
-                printf("Curr hour %d\n", currhour);
+                if (atoi(tokens[2]) != currhour) {
+                    strcpy(reply, "Error hour timestamp!");
+                } else {
+                    // printf("Updating city temp\n");
+                    // check if tmp is in range
+                    int temp = atoi(tokens[3]);
+                    if (temp < 10 || temp > 99) {         // tmp must be a 2 digit, non neg #
+                        strcpy(reply, "Error tmp is out of range [10, 99]!");
+                    } else {
+                        if (cities[city_idx].curr_hour < currhour) {    // hour has changed reset tmp
+                            cities[city_idx].curr_hour = currhour;
+                            cities[city_idx].sum_tmps = 0;
+                            cities[city_idx].num_tms_curr_hour = 0;
+                            cities[city_idx].hour_avg_temp = 0;
+                        }
+
+                        cities[city_idx].sum_tmps += temp;
+                        cities[city_idx].num_tms_curr_hour++;
+                        cities[city_idx].hour_avg_temp = cities[city_idx].sum_tmps / cities[city_idx].num_tms_curr_hour;
+
+                        strcpy(reply, "Successfully report temperature!");
+                    }
+                }
             }
         } else {
             strcpy(reply, "Message ");
@@ -132,7 +167,7 @@ char * process_message(char * msg) {
 
 int main(int argc, char *argv[]) {
 
-    print_cities();
+    set_cities();
 
     // Get the port number
     if (argc == 2) {
