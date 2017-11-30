@@ -81,14 +81,25 @@ int main(int argc, char *argv[]) {
         } else {
             // How to check for only newline?
 
-            // Get rid of white space here?
+            // Check white space is bad
+            int white_spc_found = 0;
+            for (int i = 0; i < strlen(output); i++) {
+                if (output[i] == ' ' || output[i] == '\t') {
+                    white_spc_found = 1;
+                    break;
+                }
+            }
 
-            rc = UDP_Write(sd, &addrSnd, output, BUFFER_SIZE);
+            if (white_spc_found) {
+                printf("Error, no whitespace allowed in message!\n");
+            } else {
+                rc = UDP_Write(sd, &addrSnd, output, BUFFER_SIZE);
 
-            // Receiving message from server
-            if (rc > 0) {
-                rc = UDP_Read(sd, &addrRcv, message, BUFFER_SIZE);
-                printf("%s\n", message);
+                // Receiving message from server
+                if (rc > 0) {
+                    rc = UDP_Read(sd, &addrRcv, message, BUFFER_SIZE);
+                    printf("%s\n", message);
+                }
             }
         }
   }
